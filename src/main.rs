@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use axum::{Json, Router};
 use axum::http::StatusCode;
 use axum::routing::{get, post};
@@ -11,7 +12,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(root))
-        .route("/users", post(create_user));
+        .route("/users", post(create_user))
+        .route("/request", post(request));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
 
@@ -31,6 +33,15 @@ async fn create_user(
     };
 
     (StatusCode::CREATED, Json(user))
+}
+
+async fn request() -> (StatusCode, Json<HashMap<String, String>>) {
+    let res = reqwest::get("https://ipinfo.io/json")
+        .await.unwrap()
+        .json::<HashMap<String, String>>()
+        .await.unwrap();
+
+    (StatusCode::CREATED, Json(res))
 }
 
 #[derive(Deserialize)]
