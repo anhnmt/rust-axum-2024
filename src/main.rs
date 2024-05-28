@@ -5,6 +5,7 @@ use hashbrown::HashMap;
 use jsonwebtoken::{decode, DecodingKey, encode, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
+use totp_rs::{Algorithm, Secret, TOTP};
 
 #[tokio::main]
 async fn main() {
@@ -18,7 +19,9 @@ async fn main() {
         .route("/users", post(create_user))
         .route("/request", post(request))
         .route("/login", post(login))
-        .route("/verify", post(verify));
+        .route("/verify", post(verify))
+        .route("/totp", post(totp))
+        .route("/totp-verify", post(totp_verify));
 
     // run our app with hyper, listening globally on port 3000
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -67,7 +70,7 @@ async fn login(
     let token = encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret("my_secret".as_ref())
+        &EncodingKey::from_secret("my_secret".as_ref()),
     ).unwrap();
 
     let res = LoginResponse {
@@ -94,6 +97,42 @@ async fn verify(header_map: HeaderMap) -> Result<Json<String>, StatusCode> {
     Err(StatusCode::UNAUTHORIZED)
 }
 
+async fn totp() -> Result<Json<String>, StatusCode> {
+    let totp = totp_create().await;
+    let token = totp.generate_current().unwrap();
+
+    Ok(Json(token))
+}
+
+async fn totp_verify(
+    Json(payload): Json<VerifyTOTPRequest>,
+) -> StatusCode {
+    let totp = totp_create().await;
+
+    match totp.check_current(payload.otp.as_str()) {
+        Ok(result) => {
+            if result {
+                StatusCode::OK
+            } else {
+                StatusCode::UNAUTHORIZED
+            }
+        },
+        Err(_) => StatusCode::UNAUTHORIZED,
+    }
+}
+
+async fn totp_create() -> TOTP {
+    let secret = Secret::Encoded("OBWGC2LOFVZXI4TJNZTS243FMNZGK5BNGEZDG".to_string());
+
+    TOTP::new(
+        Algorithm::SHA256,
+        6,
+        1,
+        30,
+        secret.to_bytes().unwrap(),
+    ).unwrap()
+}
+
 #[derive(Deserialize)]
 struct LoginRequest {
     username: String,
@@ -103,6 +142,11 @@ struct LoginRequest {
 #[derive(Serialize)]
 struct LoginResponse {
     access_token: String,
+}
+
+#[derive(Deserialize)]
+struct VerifyTOTPRequest {
+    otp: String,
 }
 
 #[derive(Serialize, Deserialize)]

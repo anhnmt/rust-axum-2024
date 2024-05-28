@@ -16,3 +16,4 @@ tracing = "0.1.40"
 hashbrown = { version = "0.14.5", features = ["serde"] }
 chron = "0.1.4"
 chrono = "0.4.38"
+totp-rs = "5.5.1"
