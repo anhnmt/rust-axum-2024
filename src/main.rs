@@ -60,7 +60,7 @@ async fn login(
 
     let claims = Claims {
         sub: username,
-        exp: (chrono::Utc::now() + chrono::Duration::days(1)).timestamp() as usize,
+        exp: (chrono::Utc::now() + chrono::Duration::minutes(5)).timestamp() as usize,
         iat: chrono::Utc::now().timestamp() as usize,
     };
 
