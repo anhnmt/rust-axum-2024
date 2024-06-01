@@ -3,7 +3,6 @@ members = ["crates/*"]
 resolver = "2"
 
 [workspace.package]
-name = "rust-axum-2024"
 version = "0.1.0"
 edition = "2021"
 
