@@ -1,0 +1,8 @@
+[package]
+name = "common"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+config = "0.14.0"
+serde = { workspace = true }
