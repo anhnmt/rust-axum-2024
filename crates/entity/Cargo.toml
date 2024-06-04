@@ -1,0 +1,14 @@
+[package]
+name = "entity"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "entity"
+path = "src/lib.rs"
+
+[dependencies]
+chrono = { workspace = true }
+serde = { workspace = true }
+uuid = { version = "1.8.0", features = ["v4"] }
+sea-orm = "0.12.15"
